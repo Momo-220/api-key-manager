@@ -121,14 +121,19 @@ export async function addApi(api: Omit<ApiKey, "id" | "createdAt">): Promise<Api
   }
 
   try {
+    console.log("Firebase disponible?", isFirebaseAvailable());
     if (isFirebaseAvailable()) {
+      console.log("Tentative d'ajout dans Firebase...");
       const addedApi = await addApiToFirebase(newApi)
+      console.log("Résultat Firebase:", addedApi);
       if (addedApi) {
         return addedApi
       }
+    } else {
+      console.log("Firebase n'est pas disponible, utilisation du stockage local");
     }
   } catch (error) {
-    console.error("Erreur Firebase, utilisation du stockage local:", error)
+    console.error("Erreur Firebase détaillée:", error)
   }
 
   // Fallback au stockage local
