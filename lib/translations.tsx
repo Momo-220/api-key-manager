@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 // Types de langues supportées
 export type Language = "fr" | "en"
@@ -206,7 +206,8 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     return translations[language][key] || key
   }
 
-  return <TranslationContext.Provider value={{ language, setLanguage, t }}>{children}</TranslationContext.Provider>
+  const contextValue: TranslationContextType = { language, setLanguage, t };
+  return <TranslationContext.Provider value={contextValue}>{children}</TranslationContext.Provider>
 }
 
 // Hook pour utiliser les traductions
@@ -216,5 +217,4 @@ export function useTranslation() {
     throw new Error("useTranslation must be used within a TranslationProvider")
   }
   return context
-}
-
+} 
