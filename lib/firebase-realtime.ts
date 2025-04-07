@@ -52,21 +52,45 @@ export async function getApiByIdFromFirebase(id: string): Promise<ApiKey | null>
 
 // Fonction pour ajouter une nouvelle API
 export async function addApiToFirebase(api: Omit<ApiKey, "id">): Promise<ApiKey | null> {
-  if (!isFirebaseAvailable()) return null;
+  console.log("Début addApiToFirebase avec données:", api);
+  
+  if (!isFirebaseAvailable()) {
+    console.log("Firebase n'est pas disponible");
+    return null;
+  }
 
   try {
     const db = getDatabase();
-    if (!db) return null;
-
-    const newRef = ref(db, `${DB_REF}/${Date.now()}`);
-    await set(newRef, api);
+    console.log("Database obtenue:", !!db);
     
-    return {
-      id: newRef.key || Date.now().toString(),
+    if (!db) {
+      console.log("Database est null");
+      return null;
+    }
+
+    const newId = Date.now().toString();
+    console.log("Création d'une nouvelle référence avec ID:", newId);
+    
+    const apiRef = ref(db, `${DB_REF}/${newId}`);
+    console.log("Référence créée:", apiRef.key);
+
+    console.log("Tentative d'écriture des données...");
+    await set(apiRef, api);
+    console.log("Données écrites avec succès");
+    
+    const newApi = {
+      id: newId,
       ...api,
     };
+    console.log("Nouvelle API créée:", newApi);
+    
+    return newApi;
   } catch (error) {
-    console.error("Erreur lors de l'ajout de l'API à Firebase:", error);
+    console.error("Erreur détaillée lors de l'ajout de l'API à Firebase:", error);
+    if (error instanceof Error) {
+      console.error("Message d'erreur:", error.message);
+      console.error("Stack trace:", error.stack);
+    }
     return null;
   }
 }

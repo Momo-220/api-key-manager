@@ -8,18 +8,17 @@ let db: Database | undefined = undefined
 // Fonction pour initialiser Firebase de manière lazy
 export function getDatabase() {
   if (typeof window === "undefined") {
-    // Ne pas initialiser côté serveur
-    console.log("Firebase: Exécution côté serveur, initialisation ignorée");
+    console.log("[Firebase Init] Exécution côté serveur, initialisation ignorée");
     return undefined;
   }
 
   if (db !== undefined) {
-    console.log("Firebase: Déjà initialisé");
+    console.log("[Firebase Init] Base de données déjà initialisée");
     return db;
   }
 
   try {
-    console.log("Firebase: Tentative d'initialisation...");
+    console.log("[Firebase Init] Début de l'initialisation");
     const { initializeApp } = require("firebase/app");
     const { getDatabase: getRealtimeDb } = require("firebase/database");
 
@@ -34,33 +33,45 @@ export function getDatabase() {
       measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     };
 
-    console.log("Firebase: Configuration chargée", {
+    console.log("[Firebase Init] Configuration:", {
       apiKeyExists: !!firebaseConfig.apiKey,
-      databaseUrlExists: !!firebaseConfig.databaseURL
+      databaseUrlExists: !!firebaseConfig.databaseURL,
+      projectIdExists: !!firebaseConfig.projectId,
+      config: firebaseConfig
     });
 
-    // Vérifier que les variables d'environnement essentielles sont définies
     if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
-      console.warn("Variables d'environnement Firebase manquantes");
+      console.warn("[Firebase Init] Variables d'environnement manquantes");
       return undefined;
     }
 
+    console.log("[Firebase Init] Initialisation de l'application Firebase");
     const app = initializeApp(firebaseConfig);
+    
+    console.log("[Firebase Init] Obtention de la référence à la base de données");
     db = getRealtimeDb(app);
-    console.log("Firebase: Realtime Database initialisée avec succès");
+    
+    console.log("[Firebase Init] Base de données initialisée avec succès");
     return db;
   } catch (error) {
-    console.error("Erreur détaillée lors de l'initialisation de Firebase:", error);
+    console.error("[Firebase Init] Erreur lors de l'initialisation:", error);
+    if (error instanceof Error) {
+      console.error("[Firebase Init] Message:", error.message);
+      console.error("[Firebase Init] Stack:", error.stack);
+    }
     return undefined;
   }
 }
 
 // Fonction pour vérifier si Firebase est disponible
 export function isFirebaseAvailable() {
-  // Tente d'initialiser la connexion si pas déjà fait
+  console.log("[Firebase Check] Vérification de la disponibilité");
   if (db === undefined && typeof window !== "undefined") {
+    console.log("[Firebase Check] Tentative d'initialisation");
     getDatabase();
   }
-  return typeof window !== "undefined" && db !== undefined;
+  const available = typeof window !== "undefined" && db !== undefined;
+  console.log("[Firebase Check] Firebase disponible:", available);
+  return available;
 }
 
